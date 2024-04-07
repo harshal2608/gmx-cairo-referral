@@ -14,6 +14,11 @@ trait IReferralStorage<TContractState> {
         _code: felt252,
     ) -> ContractAddress;
 
+    fn get_user_code(
+        ref self: TContractState,
+        _account: ContractAddress,
+    ) -> felt252;
+
     fn set_trader_referral_code(
         ref self: TContractState,
         _code: felt252,
@@ -69,7 +74,8 @@ mod ReferralStorage {
 
     #[storage]
     struct Storage {
-        code_owners: LegacyMap::<felt252, ContractAddress>,
+        code_owner: LegacyMap::<felt252, ContractAddress>,
+        user_code: LegacyMap::<ContractAddress, felt252>,
         trader_referral_codes: LegacyMap::<ContractAddress, felt252>,
         #[substorage(v0)]
         ownable: OwnableComponent::Storage,
@@ -104,15 +110,22 @@ mod ReferralStorage {
             ref self: ContractState,
             _code: felt252,
         ) -> ContractAddress {
-            self.code_owners.read(_code)
+            self.code_owner.read(_code)
+        }
+
+        fn get_user_code(
+            ref self: ContractState,
+            _account: ContractAddress,
+        ) -> felt252 {
+            self.user_code.read(_account)
         }
 
         fn set_trader_referral_code(
             ref self: ContractState,
             _code: felt252,
         ){
-            assert!(self.code_owners.read(_code).is_non_zero(), "ReferralStorage: code not found");
-            assert!(self.code_owners.read(_code) != get_caller_address(), "ReferralStorage: code owner cannot set code for himself");
+            assert!(self.code_owner.read(_code).is_non_zero(), "ReferralStorage: code not found");
+            assert!(self.code_owner.read(_code) != get_caller_address(), "ReferralStorage: code owner cannot set code for himself");
 
             let _account = get_caller_address();
             self.trader_referral_codes.write(_account, _code);
@@ -123,11 +136,12 @@ mod ReferralStorage {
             ref self: ContractState,
             _code: felt252,
         ){
-            // assert that user already has a code
+            assert!(!self.user_code.read(get_caller_address()).is_non_zero(), "ReferralStorage: user already has a code");
 
-            assert!(!self.code_owners.read(_code).is_non_zero(), "ReferralStorage: code already registered");
+            assert!(!self.code_owner.read(_code).is_non_zero(), "ReferralStorage: code already registered");
 
-            self.code_owners.write(_code, get_caller_address());
+            self.code_owner.write(_code, get_caller_address());
+            self.user_code.write(get_caller_address(), _code);
 
             self.emit(RegisterCode{code:_code, account: get_caller_address()});
         }

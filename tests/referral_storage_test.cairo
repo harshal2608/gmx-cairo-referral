@@ -32,17 +32,17 @@ fn test_register_code() {
     assert_eq!(code_owner, user);
 }
 
-// #[test]
-// #[should_panic(expected: ("ReferralStorage: account already has code",))]
-// fn test_user_register_code_again() {
-//     let (contract_address,dispatcher,owner) = setup_referral_storage_dispatcher();
+#[test]
+#[should_panic(expected: ("ReferralStorage: user already has code",))]
+fn test_user_register_code_again() {
+    let (contract_address,dispatcher,_owner) = setup_referral_storage_dispatcher();
     
-//     let user = 123.try_into().unwrap();
-//     start_prank(CheatTarget::One(contract_address), user);
+    let user = 123.try_into().unwrap();
+    start_prank(CheatTarget::One(contract_address), user);
 
-//     dispatcher.register_code('jonty');
-//     dispatcher.register_code('jonty');
-// }
+    dispatcher.register_code('jonty');
+    dispatcher.register_code('monty');
+}
 
 #[test]
 #[should_panic(expected: ("ReferralStorage: code already registered",))]
