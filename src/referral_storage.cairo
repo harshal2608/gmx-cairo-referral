@@ -5,17 +5,17 @@ use zeroable::Zeroable;
 #[starknet::interface]
 trait IReferralStorage<TContractState> {
     fn get_trader_referral_code(
-        ref self: TContractState,
+         self: @TContractState,
         _account: ContractAddress,
     ) -> felt252;
 
     fn get_code_owner(
-        ref self: TContractState,
+         self: @TContractState,
         _code: felt252,
     ) -> ContractAddress;
 
     fn get_user_code(
-        ref self: TContractState,
+         self: @TContractState,
         _account: ContractAddress,
     ) -> felt252;
 
@@ -47,6 +47,14 @@ mod ReferralStorage {
 
     component!(path: UpgradeableComponent, storage: upgradeable_storage, event: UpgradeableEvent);
     component!(path: OwnableComponent, storage: ownable, event: OwnableEvent);
+
+    #[abi(embed_v0)]
+    /// Ownable
+    impl OwnableImpl = OwnableComponent::OwnableImpl<ContractState>;
+    impl OwnableInternalImpl = OwnableComponent::InternalImpl<ContractState>;
+
+    /// Upgradeable
+    impl UpgradeableInternalImpl = UpgradeableComponent::InternalImpl<ContractState>;
 
     #[event]
     #[derive(Drop, starknet::Event)]
@@ -88,33 +96,25 @@ mod ReferralStorage {
         self.ownable.initializer(owner);
     }
 
-    /// Ownable
-    #[abi(embed_v0)]
-    impl OwnableImpl = OwnableComponent::OwnableImpl<ContractState>;
-    impl OwnableInternalImpl = OwnableComponent::InternalImpl<ContractState>;
-
-    /// Upgradeable
-    impl UpgradeableInternalImpl = UpgradeableComponent::InternalImpl<ContractState>;
-
     #[abi(embed_v0)]
     impl ReferralStorage of super::IReferralStorage<ContractState> {
 
         fn get_trader_referral_code(
-            ref self: ContractState,
+             self: @ContractState,
             _account: ContractAddress,
         ) -> felt252 {
              self.trader_referral_codes.read(_account)
         }
 
         fn get_code_owner(
-            ref self: ContractState,
+             self: @ContractState,
             _code: felt252,
         ) -> ContractAddress {
             self.code_owner.read(_code)
         }
 
         fn get_user_code(
-            ref self: ContractState,
+             self: @ContractState,
             _account: ContractAddress,
         ) -> felt252 {
             self.user_code.read(_account)
