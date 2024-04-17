@@ -98,6 +98,23 @@ fn test_set_trader_referral_code_self() {
 }
 
 #[test]
+#[should_panic(expected: ("ReferralStorage: trader already has a code",))]
+fn test_set_trader_referral_code_already_has_code() {
+    let (contract_address,dispatcher,_owner) = setup_referral_storage_dispatcher();
+    
+    let user = 123.try_into().unwrap();
+    start_prank(CheatTarget::One(contract_address), user);
+    dispatcher.register_code('jonty');
+
+    let user2 = 124.try_into().unwrap();
+    start_prank(CheatTarget::One(contract_address), user2);
+    dispatcher.register_code('monty');
+
+    dispatcher.set_trader_referral_code('jonty');
+    dispatcher.set_trader_referral_code('monty');
+}
+
+#[test]
 #[should_panic]
 fn test_upgrade_referral_storage_by_not_onwer() {
     let (_contract_address,dispatcher,_owner) = setup_referral_storage_dispatcher();

@@ -124,6 +124,7 @@ mod ReferralStorage {
             ref self: ContractState,
             _code: felt252,
         ){
+            assert!(!self.trader_referral_codes.read(get_caller_address()).is_non_zero(), "ReferralStorage: trader already has a code");
             assert!(self.code_owner.read(_code).is_non_zero(), "ReferralStorage: code not found");
             assert!(self.code_owner.read(_code) != get_caller_address(), "ReferralStorage: code owner cannot set code for himself");
 
