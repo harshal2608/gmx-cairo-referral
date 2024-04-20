@@ -82,9 +82,16 @@ mod ReferralStorage {
 
     #[storage]
     struct Storage {
+        // @notice Maps the referral code to the owner
         code_owner: LegacyMap::<felt252, ContractAddress>,
+
+        // @notice Maps the owner to the referral code
+        // @dev To ensure that the trader can set the code only once
         user_code: LegacyMap::<ContractAddress, felt252>,
+
+        // @notice Maps the trader to the referee code
         trader_referral_codes: LegacyMap::<ContractAddress, felt252>,
+        
         #[substorage(v0)]
         ownable: OwnableComponent::Storage,
         #[substorage(v0)]
@@ -120,6 +127,12 @@ mod ReferralStorage {
             self.user_code.read(_account)
         }
 
+
+        // @notice Sets the code to be referred by the trader
+        // @param _code The code to set
+        // @dev Trader can set the code only once
+        // @dev Code must be registered
+        // @dev Code owner cannot set the code for himself
         fn set_trader_referral_code(
             ref self: ContractState,
             _code: felt252,
@@ -133,6 +146,10 @@ mod ReferralStorage {
             self.emit(SetTraderReferralCode{account:_account, code: _code});  
         }
 
+        // @notice Sets the referral code for the caller
+        // @param _code The code to set
+        // @dev User can set the code only once
+        // @dev Code must bre unique
         fn register_code(
             ref self: ContractState,
             _code: felt252,
